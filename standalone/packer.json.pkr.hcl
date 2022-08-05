@@ -98,7 +98,7 @@ build {
 
   provisioner "file" {
     destination = "/test/"
-    source      = "./config/test/"
+    source      = "./test/"
   }
 
   provisioner "file" {

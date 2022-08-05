@@ -1,0 +1,65 @@
+on:
+  workflow_call:
+    inputs:
+      template:
+        description: The packer file to build.
+        required: true
+        type: string
+    secrets:
+      aws-access-key:
+        description: The AWS_ACCESS_KEY_ID to use for pushing the AMI.
+        required: true
+      aws-secret-key:
+        description: The AWS_SECRET_ACCESS_KEY to use for pushing the AMI.
+        required: true
+      google_access_key:
+        description: The Google credentials to use for pushing the disk image.
+        required: true
+
+jobs:
+  publish-ami:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # The Hashicorp actions are woefully out of date and do not allow you to specify versions.
+      - run: |
+          sudo apt-get update -y
+          sudo apt-get install -y packer
+        shell: bash
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v0'
+        with:
+          credentials_json: ${{ secrets.google_access_key }}
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - name: Validate Template
+        run: |
+          packer validate -syntax-only .
+        shell: bash
+        working-directory: ${{ inputs.template }}
+
+      - name: Build
+        run: |
+          packer build -force -color=false -on-error=abort .
+          cat manifest.json
+        shell: bash
+        working-directory: ${{ inputs.template }}
+        env:
+          PACKER_LOG: 1
+          AWS_ACCESS_KEY_ID: ${{ secrets.aws-access-key }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.aws-secret-key }}
+
+      - name: Upload manifest file
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ inputs.template }}/manifest.json
+          name: manifest
+

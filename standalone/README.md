@@ -33,7 +33,7 @@ Run the Google Compute test script after setting up `gcloud` access locally with
 ```
 
 This will run for a few minutes then provide a local `output` directory with all the metrics in it including the Prometheus snapshot.
-To load the Prometheus snapshot, follow the instructions here: <>
+To load the Prometheus snapshot, follow the instructions here: <https://github.com/fluent/fluent-bit-ci/tree/main/helpers/prometheus-snapshot-loader>
 
 ```shell
 $ export PROMETHEUS_DATA=$PWD/output/prom-data.tgz
@@ -63,4 +63,4 @@ It can also be done in any other fashion you want, including manually.
 
 ## Test Framework
 
-See the [detailed documentation here](./config/test/README.md).
+See the [detailed documentation here](./test/README.md).

@@ -2,7 +2,7 @@
 set -eu
 echo "Starting data generation"
 
-LOG_RATE=${LOG_RATE:-20}
+LOG_RATE=${LOG_RATE:-200000}
 LOG_SIZE=${LOG_SIZE:-1000}
 CONTAINER_NAME=${CONTAINER_NAME:-data-generator}
 
