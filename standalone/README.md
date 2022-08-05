@@ -23,7 +23,19 @@ We provide a [simple test framework](./config/test/run-test.sh) to exercise ever
 
 The [Calyptia configuration](https://github.com/calyptia/bats) of the [Bash Automated Test System (BATS)](https://bats-core.readthedocs.io/en/stable/) is also provided.
 
-## Example
+## Usage
+
+Essentially the approach is as follows:
+
+1. Create a VM from the image.
+2. Configure all the tools to do what you want from an evaluation perspective.
+3. Run the tools for a configurable amount of time.
+4. Capture metrics and analyse them.
+
+All this can be wrapped up in a script like the [test example](./run-gcp-test.sh).
+It can also be done in any other fashion you want, including manually.
+
+### Example
 
 Run the Google Compute test script after setting up `gcloud` access locally with the right project, etc.
 
@@ -41,25 +53,30 @@ $ ~/github/fluent/fluent-bit-ci/helpers/prometheus-snapshot-loader/run.sh
 Extracting tarball: /tmp/output/prom-data.tgz --> /tmp/tmp.2ao8T5scjj
 Data directory extracted: /tmp/tmp.2ao8T5scjj/20220805T101627Z-168a7d7455a9dfeb
 Found snapshot directory: /tmp/tmp.2ao8T5scjj/20220805T101627Z-168a7d7455a9dfeb
-~/github/fluent/fluent-bit-ci/helpers/prometheus-snapshot-loader ~/github/calyptia/marketplace-offerings/aws/server/vendor-comparison
 Creating prometheus-snapshot-loader_prometheus_1 ... done
 Creating prometheus-snapshot-loader_grafana_1    ... done
-~/github/calyptia/marketplace-offerings/aws/server/vendor-comparison
 ```
 
 Grafana is now available on `https://localhost:3000` and Prometheus on `https://localhost:9090`.
 
-## Usage
+For example we can query the CPU usage:
 
-Essentially the approach is as follows:
+- namedprocess_namegroup_cpu_seconds_total{groupname="fluent-bit"}
+- namedprocess_namegroup_cpu_seconds_total{groupname="vector"}
 
-1. Create a VM from the image.
-2. Configure all the tools to do what you want from an evaluation perspective.
-3. Run the tools for a configurable amount of time.
-4. Capture metrics and analyse them.
+![Example screenshot](../resources/screenshots/tail_null_example.png)
 
-All this can be wrapped up in a script like the [test example](./run-gcp-test.sh).
-It can also be done in any other fashion you want, including manually.
+To stop running the stack, just kill the containers:
+
+```shell
+$ docker ps
+CONTAINER ID   IMAGE                     COMMAND                  CREATED          STATUS          PORTS                                       NAMES
+bb699bd1b6c4   grafana/grafana           "/run.sh"                23 minutes ago   Up 23 minutes   0.0.0.0:3000->3000/tcp, :::3000->3000/tcp   prometheus-snapshot-loader_grafana_1
+2dacdb667cbd   prom/prometheus:v2.33.3   "/bin/prometheus --c…"   23 minutes ago   Up 23 minutes   0.0.0.0:9090->9090/tcp, :::9090->9090/tcp   prometheus-snapshot-loader_prometheus_1
+$ docker rm -f prometheus-snapshot-loader_grafana_1 prometheus-snapshot-loader_prometheus_1
+prometheus-snapshot-loader_grafana_1
+prometheus-snapshot-loader_prometheus_1
+```
 
 ## Test Framework
 

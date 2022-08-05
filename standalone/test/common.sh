@@ -17,6 +17,15 @@ function prom_snapshot() {
 
 function prom_query() {
     # Our list of metrics to dump out explicitly
+    # From Fluent Bit
+    From Vector:
+    component_discarded_events_total
+component_errors_total
+component_received_event_bytes_total
+component_received_events_total
+component_sent_event_bytes_total
+component_sent_events_total
+events_out_total
     declare -a QUERY_METRICS=("fluentbit_input_records_total"
                             "fluentbit_input_bytes_total"
                             "fluentbit_filter_add_records_total"
@@ -28,25 +37,62 @@ function prom_query() {
                             "fluentbit_output_retried_records_total"
                             "fluentbit_output_retries_failed_total"
                             "fluentbit_output_retries_total"
-                            "container_cpu_system_seconds_total"
-                            "container_cpu_usage_seconds_total"
-                            "container_cpu_user_seconds_total"
-                            "container_fs_writes_bytes_total"
-                            "container_fs_write_seconds_total"
-                            "container_fs_writes_total"
-                            "container_memory_usage_bytes"
-                            "container_memory_rss"
-                            "container_network_transmit_bytes_total"
-                            "container_network_receive_packets_total"
-                            'namedprocess_namegroup_cpu_seconds_total'
-                            "namedprocess_namegroup_memory_bytes"
+                            "vector_internal_processed_bytes_total"
+                            "vector_internal_component_received_event_bytes_total"
+                            "vector_internal_component_received_events_total"
+                            "vector_internal_component_sent_event_bytes_total"
+                            "vector_internal_component_sent_events_total"
+                            "vector_internal_component_errors_total"
+                            "vector_internal_component_discarded_events_total"
+                            "vector_internal_events_out_total"
     )
 
+    mkdir -p "$OUTPUT_DIR/metrics"
+
     for METRIC in "${QUERY_METRICS[@]}"; do
-        curl --fail --silent "${PROM_URL}/api/v1/query?query=$METRIC" | jq > "$OUTPUT_DIR/$METRIC.json"
-        if command -v promplot; then
-            promplot -query "$METRIC" -title "$METRIC" -range "${RUN_TIMEOUT_MINUTES}m" -url "$PROM_URL" -file "$OUTPUT_DIR/$METRIC.png"
-        fi
+        curl --fail --silent "${PROM_URL}/api/v1/query?query=${METRIC}" | jq > "$OUTPUT_DIR/metrics/$METRIC.json"
+        promplot -query "$METRIC" -title "$METRIC" -range "${RUN_TIMEOUT_MINUTES}m" -url "$PROM_URL" -file "$OUTPUT_DIR/metrics/$METRIC.png"
+    done
+
+    # Set up prometheus queries for process exporter
+    local pe_labels=""
+    local pe_labels_separator=""
+
+    if ! is_cribl_disabled ; then
+        pe_labels+="cribl"
+        pe_labels_separator="|"
+    fi
+    if ! is_calyptia_lts_disabled ; then
+        pe_labels+="${pe_labels_separator}calyptia-fluent-bit"
+        pe_labels_separator="|"
+    fi
+    if ! is_fluent_bit_disabled ; then
+        pe_labels+="fluent-bit"
+        pe_labels+="${pe_labels_separator}fluent-bit"
+        pe_labels_separator="|"
+    fi
+    if ! is_logstash_disabled ; then
+        pe_labels+="logstash"
+        pe_labels+="${pe_labels_separator}logstash"
+        pe_labels_separator="|"
+    fi
+    if ! is_stanza_disabled ; then
+        pe_labels+="stanza"
+        pe_labels+="${pe_labels_separator}stanza"
+        pe_labels_separator="|"
+    fi
+    if ! is_vector_disabled ; then
+        pe_labels+="vector"
+        pe_labels+="${pe_labels_separator}vector"
+        pe_labels_separator="|"
+    fi
+
+    declare -a PROCESS_EXPORTER_METRICS=("namedprocess_namegroup_cpu_seconds_total" "namedprocess_namegroup_memory_bytes")
+
+    for METRIC in "${PROCESS_EXPORTER_METRICS[@]}"; do
+        curl --fail --silent "${PROM_URL}/api/v1/query?query=${METRIC}{groupname=~\"$pe_labels\"}" | jq > "$OUTPUT_DIR/metrics/$METRIC.json"
+        promplot -query "${METRIC}{groupname=~\"$pe_labels\"}" -title "$METRIC" -range "${RUN_TIMEOUT_MINUTES}m" \
+            -url "$PROM_URL" -file "$OUTPUT_DIR/metrics/$METRIC.png"
     done
 }
 

@@ -21,9 +21,13 @@ inputs = ["vector_logs"]
 
 [sources.vector_metrics]
 type = "internal_metrics"
+# Specify this so we can query them, the metric name uses this as a prefix
+namespace = "vector_internal"
 
 [sinks.prometheus]
-type = "prometheus_exporter"
+type = "prometheus_remote_write"
+endpoint = "http://localhost:9090/api/v1/write"
 inputs = ["vector_metrics"]
-address = "0.0.0.0:9598"
-default_namespace = "service"
+default_namespace = "vector_internal"
+# Mistakenly fails: https://github.com/vectordotdev/vector/issues/7998
+healthcheck = false

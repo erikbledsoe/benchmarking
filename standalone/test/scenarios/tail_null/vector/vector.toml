@@ -12,12 +12,13 @@ type = "blackhole"
 
 [sources.vector_metrics]
 type = "internal_metrics"
-namespace = "vector_tail_null"
+# Specify this so we can query them, the metric name uses this as a prefix
+namespace = "vector_internal"
 
 [sinks.prometheus]
 type = "prometheus_remote_write"
 endpoint = "http://localhost:9090/api/v1/write"
 inputs = ["vector_metrics"]
-default_namespace = "vector_tail_null"
+default_namespace = "vector_internal"
 # Mistakenly fails: https://github.com/vectordotdev/vector/issues/7998
 healthcheck = false
