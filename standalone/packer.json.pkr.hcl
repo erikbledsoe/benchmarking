@@ -70,7 +70,6 @@ build {
     source      = "./config/calyptia/"
   }
 
-  # For now we copy the same config to OSS
   provisioner "file" {
     destination = "/etc/fluent-bit/"
     source      = "./config/calyptia/"
