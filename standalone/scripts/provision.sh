@@ -13,6 +13,11 @@ apt-get -y install apt-transport-https atop ca-certificates curl gpg lsb-release
 # Do not upgrade as triggers connection problems
 # apt-get -y upgrade
 
+# Handle test data log rotation every 5 minutes
+cp -fv /tmp/logrotate-test.* /lib/systemd/system/
+systemctl daemon-reload
+systemctl enable logrotate-test.timer
+
 ## Monitoring stack
 
 # Set up Docker repo

@@ -60,6 +60,11 @@ build {
     inline = ["/usr/bin/cloud-init status --wait"]
   }
 
+  provisioner "file" {
+    destination = "/tmp/"
+    source      = "./config/logrotate/"
+  }
+
   provisioner "shell" {
     execute_command = "echo 'packer' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
     script          = "./scripts/provision.sh"
@@ -70,7 +75,6 @@ build {
     source      = "./config/calyptia/"
   }
 
-  # For now we copy the same config to OSS
   provisioner "file" {
     destination = "/etc/fluent-bit/"
     source      = "./config/calyptia/"
