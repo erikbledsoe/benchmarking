@@ -36,7 +36,7 @@ source "amazon-ebs" "calyptia_vendor_comparison" {
 
   ami_groups = [
     # This causes the ami to be publicly-accessable.
-    # "all",
+    "all",
   ]
 }
 
