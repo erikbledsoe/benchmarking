@@ -14,14 +14,10 @@ apt-get -y install apt-transport-https atop ca-certificates curl gpg lsb-release
 # apt-get -y upgrade
 
 # Handle test data log rotation every 5 minutes
-cat >> /etc/cron.d/calyptia << CRON_EOF
-# Added by Calyptia provisioning
-SHELL=/bin/sh
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+cp -fv /tmp/logrotate-test.* /lib/systemd/system/
+systemctl daemon-reload
+systemctl enable logrotate-test.timer
 
-*/5 * * * *	root    [ -f /test/logrotate.conf ] && /usr/sbin/logrotate /test/logrotate.conf >/dev/null
-#
-CRON_EOF
 ## Monitoring stack
 
 # Set up Docker repo

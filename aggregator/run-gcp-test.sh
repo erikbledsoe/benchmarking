@@ -3,7 +3,7 @@ set -eu
 
 gcloud info
 
-INPUT_IMAGE_FAMILY=${INPUT_IMAGE_FAMILY:-calyptia-vendor-comparison}
+INPUT_IMAGE_NAME=${INPUT_IMAGE_NAME:-https://www.googleapis.com/compute/v1/projects/calyptia-infra/global/images/calyptia-vendor-comparison-ubuntu-2004}
 INPUT_MACHINE_TYPE=${INPUT_MACHINE_TYPE:-e2-highcpu-8}
 INPUT_VM_COUNT=${INPUT_VM_COUNT:-3}
 INPUT_LOG_RATE=${INPUT_LOG_RATE:-2000}
@@ -12,7 +12,9 @@ INPUT_LOG_SIZE=${INPUT_LOG_SIZE:-1000}
 SSH_USERNAME=${SSH_USERNAME:-ubuntu}
 
 CORE_VM_NAME=${CORE_VM_NAME:-benchmark-instance-core}
-CORE_IMAGE_FAMILY=${CORE_IMAGE_FAMILY:-gold-calyptia-core}
+# This should be the latest public image for the region you want to use
+# TODO: auto-PR to run gcloud compute images describe-from-family 'gold-calyptia-core' to retrieve latest and update here
+CORE_IMAGE_NAME=${CORE_IMAGE_NAME:-https://www.googleapis.com/compute/v1/projects/calyptia-infra/global/images/gold-calyptia-core-20220808152134-us}
 CORE_MACHINE_TYPE=${CORE_MACHINE_TYPE:-e2-highcpu-32}
 CORE_TCP_PORT=${CORE_TCP_PORT:-5000}
 CALYPTIA_CLOUD_PROJECT_TOKEN=${CALYPTIA_CLOUD_PROJECT_TOKEN:?}
@@ -37,14 +39,14 @@ if [[ "${SKIP_VM_CREATION:-no}" == "no" ]]; then
         VM_NAME="benchmark-instance-input-$index"
         gcloud compute instances delete "$VM_NAME" -q &> /dev/null || true
         gcloud compute instances create "$VM_NAME" \
-            --image-family="$INPUT_IMAGE_FAMILY" \
+            --image="$INPUT_IMAGE_NAME" \
             --machine-type="$INPUT_MACHINE_TYPE"
     done
 
     echo "Creating Core instance"
     gcloud compute instances delete "$CORE_VM_NAME" -q &> /dev/null || true
     gcloud compute instances create "$CORE_VM_NAME" \
-        --image-family="$CORE_IMAGE_FAMILY" \
+        --image="$CORE_IMAGE_NAME" \
         --machine-type="$CORE_MACHINE_TYPE" \
         --metadata=CALYPTIA_CLOUD_PROJECT_TOKEN="$CALYPTIA_CLOUD_PROJECT_TOKEN",CALYPTIA_CLOUD_AGGREGATOR_NAME="$CALYPTIA_CLOUD_AGGREGATOR_NAME"
     wait_for_ssh "$CORE_VM_NAME"

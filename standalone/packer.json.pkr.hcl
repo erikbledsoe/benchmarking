@@ -60,6 +60,11 @@ build {
     inline = ["/usr/bin/cloud-init status --wait"]
   }
 
+  provisioner "file" {
+    destination = "/tmp/"
+    source      = "./config/logrotate/"
+  }
+
   provisioner "shell" {
     execute_command = "echo 'packer' | {{ .Vars }} sudo -S -E bash '{{ .Path }}'"
     script          = "./scripts/provision.sh"

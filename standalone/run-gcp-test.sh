@@ -2,7 +2,7 @@
 set -eu
 
 VM_NAME=${VM_NAME:-vendor-comparison-test}
-IMAGE_FAMILY=${IMAGE_FAMILY:-calyptia-vendor-comparison}
+IMAGE_NAME=${IMAGE_NAME:-https://www.googleapis.com/compute/v1/projects/calyptia-infra/global/images/calyptia-vendor-comparison-ubuntu-2004}
 MACHINE_TYPE=${MACHINE_TYPE:-e2-highcpu-32}
 SSH_USERNAME=${SSH_USERNAME:-ubuntu}
 
@@ -14,7 +14,7 @@ TEST_SCENARIO=${TEST_SCENARIO:-tail_null}
 gcloud compute instances delete "$VM_NAME" -q &> /dev/null || true
 
 gcloud compute instances create "$VM_NAME" \
-    --image-family="$IMAGE_FAMILY" \
+    --image="$IMAGE_NAME" \
     --machine-type="$MACHINE_TYPE"
 
 rm -rf "${OUTPUT_DIR:?}"/
@@ -41,12 +41,18 @@ fi
 echo "Running test"
 gcloud compute ssh "$SSH_USERNAME"@"$VM_NAME" --command "export TEST_SCENARIO=$TEST_SCENARIO;export RUN_TIMEOUT_MINUTES=$RUN_TIMEOUT_MINUTES;export OUTPUT_DIR=/tmp/output;/test/run-test.sh"
 
-echo "Transferring output files to $OUTPUT_DIR"
-gcloud compute scp --recurse "$SSH_USERNAME"@"$VM_NAME":/tmp/output/* "$OUTPUT_DIR"
+if [[ $RUN_TIMEOUT_MINUTES -gt 0 ]]; then
+    echo "Transferring output files to $OUTPUT_DIR"
+    gcloud compute scp --recurse "$SSH_USERNAME"@"$VM_NAME":/tmp/output/* "$OUTPUT_DIR"
 
-if [[ "${SKIP_TEARDOWN:-no}" != "no" ]]; then
-    echo "Leaving instance running"
+    if [[ "${SKIP_TEARDOWN:-no}" != "no" ]]; then
+        echo "Leaving instance running"
+    else
+        echo "Destroying instance"
+        gcloud compute instances delete "$VM_NAME" -q
+    fi
 else
-    echo "Destroying instance"
-    gcloud compute instances delete "$VM_NAME" -q
+    echo "Left $VM_NAME running for continuous test"
 fi
+
+echo "Run completed"
