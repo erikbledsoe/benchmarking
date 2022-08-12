@@ -18,4 +18,4 @@ This is all configurable via the environment variables below:
 We require you to provide the following environment variables:
 
 - CALYPTIA_CLOUD_PROJECT_TOKEN: The Calyptia Cloud project token to use.
-- CALYPTIA_CLOUD_AGGREGATOR_NAME: The Calyptia Cloud aggregator name to use, this should be unique and not existing prior to running the script (remove and old ones if reusing)
+- CALYPTIA_CLOUD_AGGREGATOR_NAME: The Calyptia Cloud aggregator name to use, this should be unique and not existing prior to running the script (remove any old ones if reusing)
